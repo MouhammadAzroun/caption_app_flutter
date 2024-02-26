@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "569617503901",
+    "project_id": "caption-image-app-640a0",
+    "storage_bucket": "caption-image-app-640a0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:569617503901:android:54662789f320473bfbe674",
+        "android_client_info": {
+          "package_name": "com.example.image_caption_flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9ZmOOSo7VgrwZ6H6_1Y-TaLRKvkSNNSQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
