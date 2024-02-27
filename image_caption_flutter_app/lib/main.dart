@@ -1,11 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:image_caption_flutter_app/firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'search.dart';
 import 'upload.dart';
 import 'favorites.dart';
 import 'login.dart';
 import 'home.dart';
+import 'profile.dart'; // Assuming you have a Profile widget
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MainApp());
 }
 
@@ -51,6 +59,13 @@ class _MyHomePageState extends State<MyHomePage> {
         _selectedIndex = index;
       });
     }
+  }
+
+  // Method added to change the selected index to the Profile page
+  void selectProfilePage() {
+    setState(() {
+      _selectedIndex = 4; // Assuming index 4 is for the Profile page
+    });
   }
 
   @override
@@ -99,7 +114,15 @@ class _MyHomePageState extends State<MyHomePage> {
       case 3:
         return Favorites();
       case 4:
-        return Login();
+        // Check if the user is signed in
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          // User is signed in, navigate to Profile
+          return Profile(); // Ensure you have a Profile widget
+        } else {
+          // User is not signed in, navigate to Login
+          return Login();
+        }
       default:
         return Home();
     }
