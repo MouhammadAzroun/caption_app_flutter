@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateAccount extends StatefulWidget {
-  const CreateAccount({Key? key}) : super(key: key);
+  const CreateAccount({super.key});
 
   @override
   _CreateAccountState createState() => _CreateAccountState();
@@ -14,13 +14,14 @@ class _CreateAccountState extends State<CreateAccount> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String? _selectedImagePath;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true, // Keep this to avoid resizing due to keyboard
       appBar: AppBar(
-        title: Text('Create Account'),
+        title: const Text('Create Account'),
       ),
       body: Center( // Use Center to align everything in the middle
         child: SingleChildScrollView( // Allows scrolling when the keyboard is visible
@@ -28,21 +29,42 @@ class _CreateAccountState extends State<CreateAccount> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center, // Center the column itself
             children: <Widget>[
-              GestureDetector(
-                onTap: () {
-                  // Handle image tap
-                },
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.blue,
-                  child: Icon(
-                    Icons.account_circle,
-                    size: 120,
-                    color: Colors.white,
-                  ),
+              Center( // Center the stack in the middle of the screen
+                child: Stack(
+                  alignment: Alignment.bottomRight, // Position the edit icon at the bottom right of the avatar
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        // Handle image tap
+                      },
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.blue,
+                        child: _selectedImagePath == null
+                          ? const Icon(Icons.account_circle, size: 120, color: Colors.white)
+                          : Image.asset(_selectedImagePath!, fit: BoxFit.cover),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue, // Match the icon button background to the theme or avatar ring
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white, // Add a white border for better visibility
+                          width: 2,
+                        ),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.white), // Ensure icon color contrasts well with the background
+                        onPressed: () {
+                          _showImagePicker(context);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
@@ -50,10 +72,10 @@ class _CreateAccountState extends State<CreateAccount> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
-                  prefixIcon: Icon(Icons.person, color: Colors.blue),
+                  prefixIcon: const Icon(Icons.person, color: Colors.blue),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -61,10 +83,10 @@ class _CreateAccountState extends State<CreateAccount> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
-                  prefixIcon: Icon(Icons.email, color: Colors.blue),
+                  prefixIcon: const Icon(Icons.email, color: Colors.blue),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: _passwordController,
                 obscureText: !_passwordVisible,
@@ -73,7 +95,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
-                  prefixIcon: Icon(Icons.lock, color: Colors.blue),
+                  prefixIcon: const Icon(Icons.lock, color: Colors.blue),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _passwordVisible ? Icons.visibility : Icons.visibility_off,
@@ -87,7 +109,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   try {
@@ -95,6 +117,10 @@ class _CreateAccountState extends State<CreateAccount> {
                       email: _emailController.text,
                       password: _passwordController.text,
                     );
+                    // Before signing out, send verification email
+                    if (userCredential.user != null && !userCredential.user!.emailVerified) {
+                      await userCredential.user!.sendEmailVerification();
+                    }
                     // Immediately sign out the user after account creation
                     await FirebaseAuth.instance.signOut();
                     
@@ -108,11 +134,10 @@ class _CreateAccountState extends State<CreateAccount> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           backgroundColor: Colors.white,
-                          title: Text("Success"),
-                          content: Text("Account created successfully"),
+                          title: const Text("Success"),
+                          content: Text("An email has been sent to ${_emailController.text} Please verify your email address before logging in."),
                           actions: <Widget>[
                             TextButton(
-                              child: Text("OK"),
                               style: TextButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,
@@ -121,6 +146,7 @@ class _CreateAccountState extends State<CreateAccount> {
                                 Navigator.of(context).pop();
                                 Navigator.pop(context);
                               },
+                              child: const Text("OK"),
                             ),
                           ],
                         );
@@ -130,11 +156,10 @@ class _CreateAccountState extends State<CreateAccount> {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: Text("Error"),
+                        title: const Text("Error"),
                         content: Text(e.toString()),
                         actions: <Widget>[
                           TextButton(
-                            child: Text("Okay"),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white,
                               backgroundColor: Colors.blue,
@@ -142,6 +167,7 @@ class _CreateAccountState extends State<CreateAccount> {
                             onPressed: () {
                               Navigator.of(ctx).pop();
                             },
+                            child: const Text("Okay"),
                           ),
                         ],
                       ),
@@ -154,15 +180,60 @@ class _CreateAccountState extends State<CreateAccount> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),
-                child: Text('Sign Up'),
+                child: const Text('Sign Up'),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _showImagePicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Choose an image"),
+          content: Container(
+            height: 360, // Adjust height as necessary
+            width: double.maxFinite,
+            child: GridView.count(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8.0, // Space between columns
+              mainAxisSpacing: 8.0, // Space between rows
+              childAspectRatio: 1, // Aspect ratio for the children
+              children: <String>[
+                'assets/images/Avatars/bear.png',
+                'assets/images/Avatars/blond_woman.png',
+                'assets/images/Avatars/cat.png',
+                'assets/images/Avatars/chicken.png',
+                'assets/images/Avatars/dog.png',
+                'assets/images/Avatars/fox.png',
+                'assets/images/Avatars/girl.png',
+                'assets/images/Avatars/gorilla.png',
+                'assets/images/Avatars/panda.png',
+                'assets/images/Avatars/rabbit.png',
+                'assets/images/Avatars/user.png',
+                'assets/images/Avatars/woman.png',
+              ].map((String path) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedImagePath = path;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Image.asset(path, fit: BoxFit.cover),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
     );
   }
 }
