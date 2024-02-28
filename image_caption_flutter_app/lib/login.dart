@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 
 class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+  const Login({super.key});
 
   @override
   _LoginState createState() => _LoginState();
@@ -14,8 +14,8 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   bool _passwordVisible = false; // Add this line
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +43,8 @@ class _LoginState extends State<Login> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // App logo or name
-                FlutterLogo(size: 100),
-                SizedBox(height: 30.0),
+                const FlutterLogo(size: 100),
+                const SizedBox(height: 30.0),
 
                 // Email TextField
                 TextField(
@@ -57,7 +57,7 @@ class _LoginState extends State<Login> {
                     prefixIcon: Icon(Icons.email, color: blueThemeColor),
                   ),
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // Password TextField
                 TextField(
@@ -82,7 +82,7 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
 
                 // Login Button
                 ElevatedButton(
@@ -93,25 +93,34 @@ class _LoginState extends State<Login> {
                         email: _emailController.text,
                         password: _passwordController.text,
                       );
-                      // Navigate back to MyHomePage which will check the auth status and show the appropriate page
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => MyHomePage()),
-                        (Route<dynamic> route) => false,
-                        );
+                      // Check if email is verified
+                      var user = FirebaseAuth.instance.currentUser;
+                      if (user != null && !user.emailVerified) {
+                        // If not verified, show a message or handle accordingly
+                        // For example, sign the user out and ask them to verify their email
+                        await FirebaseAuth.instance.signOut();
+                        // Show a message to the user about email verification
+                      } else {
+                        // Navigate back to MyHomePage which will check the auth status and show the appropriate page
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MyHomePage()),
+                          (Route<dynamic> route) => false,
+                          );
+                      }
                     } on FirebaseAuthException catch (e) {
                       // If sign in fails, display an alert dialog with the error
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: Text("Login Failed"),
+                          title: const Text("Login Failed"),
                           content: Text(e.message ?? "An unknown error occurred"),
                           actions: <Widget>[
                             TextButton(
                               onPressed: () {
                                 Navigator.of(ctx).pop();
                               },
-                              child: Text("Okay"),
+                              child: const Text("Okay"),
                             ),
                           ],
                         ),
@@ -125,18 +134,18 @@ class _LoginState extends State<Login> {
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 15.0),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 15.0),
                     child: Text('Log in', style: TextStyle(fontSize: 16)),
                   ),
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
 
                 // Sign up TextButton
                 RichText(
                   text: TextSpan(
                     text: "Don't have an account? ",
-                    style: TextStyle(color: Colors.black),
+                    style: const TextStyle(color: Colors.black),
                     children: <TextSpan>[
                       TextSpan(
                         text: 'Sign up',
@@ -146,7 +155,7 @@ class _LoginState extends State<Login> {
                             // Navigate to createAccount.dart
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => CreateAccount()),
+                              MaterialPageRoute(builder: (context) => const CreateAccount()),
                             );
                           },
                       ),

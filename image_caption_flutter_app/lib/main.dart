@@ -23,7 +23,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      home: const MyHomePage(),
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -33,7 +33,7 @@ class MainApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -43,22 +43,9 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
-    if (index == 2) { // Assuming 'Upload' is at index 2
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true, // Add this line
-        builder: (BuildContext context) {
-          return FractionallySizedBox(
-            heightFactor: 0.93, // Adjust the factor to control the height
-            child: Upload(), // Your Upload widget
-          );
-        },
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   // Method added to change the selected index to the Profile page
@@ -104,27 +91,39 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _getScreenWidget() {
+    // Check if the user is signed in
+    final user = FirebaseAuth.instance.currentUser;
     switch (_selectedIndex) {
       case 0:
-        return Home();
+        return const Home();
       case 1:
-        return Search();
+      if (user != null) {
+        return const Search();
+      } else {
+        return const Login();
+      }
       case 2:
-        return Upload();
+        if (user != null) {
+          return const Upload();
+        } else {
+          return const Login();
+        }
       case 3:
-        return Favorites();
+      if (user != null) {
+        return const Favorites();
+      } else {
+        return const Login();
+      }
       case 4:
-        // Check if the user is signed in
-        final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           // User is signed in, navigate to Profile
-          return Profile(); // Ensure you have a Profile widget
+          return const Profile(); // Ensure you have a Profile widget
         } else {
           // User is not signed in, navigate to Login
-          return Login();
+          return const Login();
         }
-      default:
-        return Home();
     }
+    // This line will execute if none of the cases match
+    return const Home();
   }
 }
