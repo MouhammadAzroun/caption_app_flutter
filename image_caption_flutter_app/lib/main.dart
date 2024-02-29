@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:image_caption_flutter_app/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'search.dart';
 import 'upload.dart';
 import 'favorites.dart';
@@ -41,26 +42,49 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+  String? userAvatarUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserAvatar();
+  }
+
+  void _fetchUserAvatar() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final docSnapshot = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      print("Fetched user avatar URL: ${docSnapshot.data()?['avatar']}");
+      setState(() {
+        userAvatarUrl = docSnapshot.data()?['avatar'];
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-  }
-
-  // Method added to change the selected index to the Profile page
-  void selectProfilePage() {
-    setState(() {
-      _selectedIndex = 4; // Assuming index 4 is for the Profile page
-    });
+    print("Selected index: $_selectedIndex");
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    print("User is logged in: $isLoggedIn");
+    Widget profileIcon = Icon(Icons.account_circle); // Default profile icon
+
+    if (isLoggedIn && userAvatarUrl != null) {
+      // Use AssetImage for local assets
+      profileIcon = CircleAvatar(
+        backgroundImage: AssetImage(userAvatarUrl!),
+      );
+    }
+
     return Scaffold(
       body: _getScreenWidget(),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -78,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Favorites',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
+            icon: profileIcon,
             label: 'Profile',
           ),
         ],
@@ -117,7 +141,11 @@ class _MyHomePageState extends State<MyHomePage> {
       case 4:
         if (user != null) {
           // User is signed in, navigate to Profile
-          return const Profile(); // Ensure you have a Profile widget
+          return Profile(onAvatarUpdated: (String newPath) {
+            setState(() {
+              userAvatarUrl = newPath;
+            });
+          }); // Ensure you have a Profile widget with callback
         } else {
           // User is not signed in, navigate to Login
           return const Login();
