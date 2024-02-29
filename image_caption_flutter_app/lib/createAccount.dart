@@ -17,6 +17,36 @@ class _CreateAccountState extends State<CreateAccount> {
   String? _selectedImagePath;
 
   @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_updateSignUpButtonState);
+    _emailController.addListener(_updateSignUpButtonState);
+    _passwordController.addListener(_updateSignUpButtonState);
+  }
+
+  void _updateSignUpButtonState() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _usernameController.removeListener(_updateSignUpButtonState);
+    _emailController.removeListener(_updateSignUpButtonState);
+    _passwordController.removeListener(_updateSignUpButtonState);
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool _isSignUpButtonEnabled() {
+    return _usernameController.text.isNotEmpty &&
+           _emailController.text.isNotEmpty &&
+           _passwordController.text.isNotEmpty &&
+           _selectedImagePath != null;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true, // Keep this to avoid resizing due to keyboard
@@ -35,7 +65,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        // Handle image tap
+                        _showImagePicker(context);
                       },
                       child: CircleAvatar(
                         radius: 60,
@@ -111,7 +141,7 @@ class _CreateAccountState extends State<CreateAccount> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () async {
+                onPressed: _isSignUpButtonEnabled() ? () async {
                   try {
                     UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
                       email: _emailController.text,
@@ -127,6 +157,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
                       'username': _usernameController.text,
                       'email': _emailController.text,
+                      'avatar': _selectedImagePath, // Save the selected avatar's path
                     });
                     showDialog(
                       context: context,
@@ -173,7 +204,7 @@ class _CreateAccountState extends State<CreateAccount> {
                       ),
                     );
                   }
-                },
+                } : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -224,8 +255,8 @@ class _CreateAccountState extends State<CreateAccount> {
                   onTap: () {
                     setState(() {
                       _selectedImagePath = path;
+                      Navigator.of(context).pop();
                     });
-                    Navigator.of(context).pop();
                   },
                   child: Image.asset(path, fit: BoxFit.cover),
                 );
