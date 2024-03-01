@@ -44,20 +44,38 @@ class _ProfileState extends State<Profile> {
       barrierDismissible: false, // User must tap button to close the dialog
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Change Username'),
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Light blue theme background
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded corners for modern look
+          ),
+          title: Text(
+            'Change Username',
+            style: TextStyle(
+              color: const Color.fromARGB(255, 0, 0, 0),
+            ),
+          ),
           content: TextField(
             controller: _usernameController,
-            decoration: const InputDecoration(hintText: 'Enter new username'),
+            decoration: InputDecoration(
+              hintText: 'Enter new username',
+              hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), // Light blue hint text
+              enabledBorder: UnderlineInputBorder( // Underline border color when TextField is enabled
+                borderSide: BorderSide(color: Colors.blue[300]!),
+              ),
+              focusedBorder: UnderlineInputBorder( // Underline border color when TextField is focused
+                borderSide: BorderSide(color: Colors.blue[800]!),
+              ),
+            ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(color: Colors.blue[800])), // Dark blue text for buttons
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Update'),
+              child: Text('Update', style: TextStyle(color: Colors.blue[800])),
               onPressed: () async {
                 if (_usernameController.text.isNotEmpty) {
                   User? user = FirebaseAuth.instance.currentUser;
@@ -95,6 +113,7 @@ class _ProfileState extends State<Profile> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // Set the background color to white
           title: Text("Choose an image"),
           content: Container(
             height: 360, // Adjust height as necessary
@@ -209,7 +228,18 @@ class _ProfileState extends State<Profile> {
                         leading: Icon(Icons.email, color: Colors.blue), // Changed to blue theme
                       ),
                     ),
-                    // Add more fields as needed
+                    Card(
+                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                      child: ListTile(
+                        title: const Text('Change Password'),
+                        subtitle: Text('********'),
+                        leading: Icon(Icons.lock, color: Colors.blue),
+                        trailing: IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () => _changePassword(context),
+                        ),
+                      ),
+                    ),
                     SizedBox(height: 20), // Add some spacing
                     ElevatedButton(
                       onPressed: () async {
@@ -237,27 +267,48 @@ class _ProfileState extends State<Profile> {
                     SizedBox(height: 20), // Add some spacing
                     ElevatedButton(
                       onPressed: () async {
-                        User? user = FirebaseAuth.instance.currentUser;
-                        if (user != null) {
-                          try {
-                            // First, delete the user data from Firestore
-                            await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-                            
-                            // Then, delete the user account from Firebase Authentication
-                            await user.delete();
-                            
-                            // After deleting both the user data and account, sign out the user
-                            await FirebaseAuth.instance.signOut();
-                            
-                            // Finally, navigate the user back to the MyHomePage or a login screen
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => const MyHomePage()),
-                              (Route<dynamic> route) => false,
-                            );
-                          } catch (e) {
-                            print("Error deleting account and user data: $e");
-                            // Handle errors, such as showing an error message to the user
+                        final shouldDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            backgroundColor: Colors.white, // Added white background
+                            title: const Text('Delete Account'),
+                            content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: Text('Cancel', style: TextStyle(color: Colors.blue[800]!)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        ) ?? false;
+
+                        if (shouldDelete) {
+                          User? user = FirebaseAuth.instance.currentUser;
+                          if (user != null) {
+                            try {
+                              // First, delete the user data from Firestore
+                              await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+                              
+                              // Then, delete the user account from Firebase Authentication
+                              await user.delete();
+                              
+                              // After deleting both the user data and account, sign out the user
+                              await FirebaseAuth.instance.signOut();
+                              
+                              // Finally, navigate the user back to the MyHomePage or a login screen
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => const MyHomePage()),
+                                (Route<dynamic> route) => false,
+                              );
+                            } catch (e) {
+                              print("Error deleting account and user data: $e");
+                              // Handle errors, such as showing an error message to the user
+                            }
                           }
                         }
                       },
@@ -275,10 +326,106 @@ class _ProfileState extends State<Profile> {
                       ),
                       child: const Text('Delete Account'),
                     ),
+                    SizedBox(height: 20), // Add some spacing
                   ],
                 ),
               ),
       ),
+    );
+  }
+
+  Future<void> _changePassword(BuildContext context) async {
+    TextEditingController oldPasswordController = TextEditingController();
+    TextEditingController newPasswordController = TextEditingController();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Light blue theme background
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded corners for modern look
+          ),
+          title: Text(
+            'Change Password',
+            style: TextStyle(
+              color: const Color.fromARGB(255, 0, 0, 0),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: oldPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Enter old password',
+                  hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), // Light blue hint text
+                  enabledBorder: UnderlineInputBorder( // Underline border color when TextField is enabled
+                    borderSide: BorderSide(color: Colors.blue[300]!),
+                  ),
+                  focusedBorder: UnderlineInputBorder( // Underline border color when TextField is focused
+                    borderSide: BorderSide(color: Colors.blue[800]!),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Enter new password',
+                  hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), // Light blue hint text
+                  enabledBorder: UnderlineInputBorder( // Underline border color when TextField is enabled
+                    borderSide: BorderSide(color: Colors.blue[300]!),
+                  ),
+                  focusedBorder: UnderlineInputBorder( // Underline border color when TextField is focused
+                    borderSide: BorderSide(color: Colors.blue[800]!),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: Colors.blue[800])), // Dark blue text for buttons
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Update', style: TextStyle(color: Colors.blue[800])),
+              onPressed: () async {
+                User? user = FirebaseAuth.instance.currentUser;
+                AuthCredential credential = EmailAuthProvider.credential(
+                  email: user!.email!,
+                  password: oldPasswordController.text,
+                );
+                
+                user.reauthenticateWithCredential(credential).then((result) {
+                  user.updatePassword(newPasswordController.text).then((_) {
+                    // Success, show success message
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Password successfully changed")),
+                    );
+                  }).catchError((error) {
+                    // Error in updating password, show error message
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Failed to change password")),
+                    );
+                  });
+                }).catchError((error) {
+                  // Error in re-authentication, show error message
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Failed to verify old password")),
+                  );
+                });
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

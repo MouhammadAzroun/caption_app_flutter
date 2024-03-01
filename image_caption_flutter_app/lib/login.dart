@@ -113,6 +113,7 @@ class _LoginState extends State<Login> {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
+                          backgroundColor: Colors.white, // Set the background color to white
                           title: const Text("Login Failed"),
                           content: Text(e.message ?? "An unknown error occurred"),
                           actions: <Widget>[
