@@ -187,6 +187,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
+                        backgroundColor: Colors.white, // Set the background color to white
                         title: const Text("Error"),
                         content: Text(e.toString()),
                         actions: <Widget>[
@@ -228,6 +229,7 @@ class _CreateAccountState extends State<CreateAccount> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // Set the background color to white
           title: Text("Choose an image"),
           content: Container(
             height: 360, // Adjust height as necessary
