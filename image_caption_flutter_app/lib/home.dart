@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Home extends StatelessWidget {
-  const Home({super.key});
+  Home({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -9,9 +11,229 @@ class Home extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Home'),
       ),
-      body: const Center(
-        child: Text('Welcome to the Home Page!'),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('images').orderBy('timestamp', descending: true).snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          final items = snapshot.data?.docs ?? [];
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: SizedBox(height: 10), // Top padding
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    TextEditingController commentController = TextEditingController();
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              FutureBuilder<Map<String, String>>(
+                                future: getUserInfo(items[index]['uploader']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundImage: AssetImage('assets/images/Avatars/default.png'),
+                                      ),
+                                      title: Text('Loading username...'),
+                                    );
+                                  }
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage: AssetImage(snapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
+                                    ),
+                                    title: Text(snapshot.data!['username'] ?? 'Unknown User'),
+                                  );
+                                },
+                              ),
+                              SizedBox(height: 8),
+                              Image.network(items[index]['imageUrl'], width: double.infinity, height: 300, fit: BoxFit.cover),
+                              SizedBox(height: 8),
+                              StreamBuilder<QuerySnapshot>(
+                                stream: FirebaseFirestore.instance.collection('comments').doc(items[index].id).collection('imageComments').orderBy('timestamp').snapshots(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Center(child: CircularProgressIndicator());
+                                  }
+                                  final comments = snapshot.data?.docs ?? [];
+                                  return ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(), // to disable scrolling within the ListView
+                                    itemCount: comments.length,
+                                    itemBuilder: (context, commentIndex) {
+                                      return FutureBuilder<Map<String, String>>(
+                                        future: getUserInfo(comments[commentIndex]['commenter']),
+                                        builder: (context, userSnapshot) {
+                                          if (userSnapshot.connectionState == ConnectionState.waiting) {
+                                            return ListTile(
+                                              leading: CircleAvatar(
+                                                backgroundImage: AssetImage('assets/images/Avatars/default.png'),
+                                              ),
+                                              title: Text('Loading username...'),
+                                              subtitle: Text(comments[commentIndex]['text']),
+                                            );
+                                          }
+                                          return StreamBuilder<DocumentSnapshot>(
+                                            stream: FirebaseFirestore.instance.collection('votes').doc(comments[commentIndex].id).snapshots(),
+                                            builder: (context, voteSnapshot) {
+                                              if (!voteSnapshot.hasData) {
+                                                return ListTile(
+                                                  leading: CircleAvatar(
+                                                    backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
+                                                  ),
+                                                  title: Text(userSnapshot.data!['username'] ?? 'Unknown User'),
+                                                  subtitle: Text(comments[commentIndex]['text']),
+                                                  trailing: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Image.asset('assets/images/Emojis/sleeping.png', width: 24), // Default sleeping image
+                                                      SizedBox(width: 8), // Space between icon and text
+                                                      Text('...', style: TextStyle(fontWeight: FontWeight.bold)), // Placeholder for votes count
+                                                    ],
+                                                  ),
+                                                );
+                                              }
+                                              Map<String, dynamic> votes = voteSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                                              int voteCount = votes.length;
+                                              bool hasVoted = votes.containsKey(FirebaseAuth.instance.currentUser?.uid);
+                                              return ListTile(
+                                                leading: CircleAvatar(
+                                                  backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
+                                                ),
+                                                title: Text(userSnapshot.data!['username'] ?? 'Unknown User'),
+                                                subtitle: Text(comments[commentIndex]['text']),
+                                                trailing: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    FirebaseAuth.instance.currentUser != null ? IconButton(
+                                                      icon: Image.asset(hasVoted ? 'assets/images/Emojis/laughing.png' : 'assets/images/Emojis/sleeping.png', width: 24),
+                                                      onPressed: () {
+                                                        upvoteComment(comments[commentIndex].id, FirebaseAuth.instance.currentUser!.uid);
+                                                      },
+                                                    ) : Image.asset('assets/images/Emojis/sleeping.png', width: 24),
+                                                    SizedBox(width: 8), // Space between icon and text
+                                                    Text('$voteCount', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)), // Modern styled vote count
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              FirebaseAuth.instance.currentUser != null ? TextField(
+                                controller: commentController,
+                                decoration: InputDecoration(
+                                  labelText: 'Add a caption...',
+                                  contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0), // Reduced padding
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0), // More rounded corners
+                                    borderSide: BorderSide(width: 0.5), // Thinner border
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    borderSide: BorderSide(width: 0.5, color: Colors.grey), // Thinner and grey border when not focused
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    borderSide: BorderSide(width: 1, color: Colors.blue), // Slightly thicker and blue border when focused
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(Icons.send, color: Colors.blue),
+                                    onPressed: () {
+                                      final currentUser = FirebaseAuth.instance.currentUser;
+                                      if (commentController.text.trim().isNotEmpty && currentUser != null) {
+                                        addComment(items[index].id, commentController.text.trim(), currentUser.uid);
+                                        commentController.clear(); // Clear the text field after submitting
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ) : SizedBox.shrink(),
+                            ],
+                          ),
+                        ),
+                        Divider(height: 20, thickness: 10, color: Colors.black), // Divider between posts
+                      ],
+                    );
+                  },
+                  childCount: items.length,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: 10), // Bottom padding
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  Future<void> addComment(String imageId, String text, String userId) async {
+    await FirebaseFirestore.instance.collection('comments').doc(imageId).collection('imageComments').add({
+      'commenter': userId,
+      'text': text,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> upvoteComment(String commentId, String userId) async {
+    DocumentReference commentVoteRef = FirebaseFirestore.instance.collection('votes').doc(commentId);
+
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(commentVoteRef);
+
+      if (!snapshot.exists) {
+        transaction.set(commentVoteRef, {userId: true});
+      } else {
+        Map<String, dynamic> data = snapshot.data()! as Map<String, dynamic>;
+        if (data[userId] == true) {
+          transaction.update(commentVoteRef, {userId: FieldValue.delete()});
+        } else {
+          transaction.update(commentVoteRef, {userId: true});
+        }
+      }
+    });
+  }
+
+  Future<int> getVoteCount(String commentId) async {
+    DocumentSnapshot voteSnapshot = await FirebaseFirestore.instance.collection('votes').doc(commentId).get();
+
+    if (voteSnapshot.exists) {
+      Map<String, dynamic> votes = voteSnapshot.data() as Map<String, dynamic>;
+      // Count how many fields are in the document, each field represents an upvote
+      int voteCount = votes.length;
+      return voteCount;
+    } else {
+      // If the document doesn't exist, then the comment has no votes
+      return 0;
+    }
+  }
+
+  Future<Map<String, String>> getUserInfo(String userId) async {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      Map<String, dynamic> userData = userDoc.data()! as Map<String, dynamic>;
+      return {
+        'username': userData['username'] ?? 'Unknown User',
+        'avatar': userData['avatar'] ?? 'assets/images/Avatars/default.png', // Assuming you have a default avatar
+      };
+    } else {
+      return {
+        'username': 'Unknown User',
+        'avatar': 'assets/images/Avatars/default.png',
+      };
+    }
   }
 }
