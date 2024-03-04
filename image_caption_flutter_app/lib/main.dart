@@ -72,12 +72,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final isLoggedIn = FirebaseAuth.instance.currentUser != null;
     print("User is logged in: $isLoggedIn");
+    double avatarRadius = isLoggedIn ? 15.0 : 20.0; // Smaller when logged in
     Widget profileIcon = Icon(Icons.account_circle); // Default profile icon
 
     if (isLoggedIn && userAvatarUrl != null) {
-      // Use AssetImage for local assets
+      // Use NetworkImage for network assets or AssetImage for local assets
       profileIcon = CircleAvatar(
-        backgroundImage: AssetImage(userAvatarUrl!),
+        backgroundImage: AssetImage(userAvatarUrl!), // Replace with AssetImage if using local image
+        radius: avatarRadius,
       );
     }
 
@@ -119,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final user = FirebaseAuth.instance.currentUser;
     switch (_selectedIndex) {
       case 0:
-        return const Home();
+        return  Home();
       case 1:
       if (user != null) {
         return const Search();
@@ -152,6 +154,6 @@ class _MyHomePageState extends State<MyHomePage> {
         }
     }
     // This line will execute if none of the cases match
-    return const Home();
+    return  Home();
   }
 }
