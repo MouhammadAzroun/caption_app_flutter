@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'allComments.dart';
 
 class Home extends StatelessWidget {
   Home({super.key});
@@ -63,13 +64,27 @@ class Home extends StatelessWidget {
                                     return Center(child: CircularProgressIndicator());
                                   }
                                   final comments = snapshot.data?.docs ?? [];
-                                  return ListView.builder(
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(), // to disable scrolling within the ListView
-                                    itemCount: comments.length,
-                                    itemBuilder: (context, commentIndex) {
+                                  if (comments.isEmpty) {
+                                    // If there are no comments, display the message
+                                    return Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text("No captions have been written on this image", style: TextStyle(color: Colors.grey)),
+                                    );
+                                  }
+                                  return FutureBuilder<QueryDocumentSnapshot?>(
+                                    future: _getTopCommentByLikes(comments),
+                                    builder: (context, topCommentSnapshot) {
+                                      if (!topCommentSnapshot.hasData) {
+                                        return Center(child: CircularProgressIndicator());
+                                      }
+                                      final topComment = topCommentSnapshot.data;
+                                      if (topComment == null) {
+                                        return SizedBox.shrink(); // Or some placeholder if no comments exist
+                                      }
+                                      // Use your existing code to build the UI for the top comment
+                                      // For example, assuming you have a method buildCommentWidget(QueryDocumentSnapshot comment)
                                       return FutureBuilder<Map<String, String>>(
-                                        future: getUserInfo(comments[commentIndex]['commenter']),
+                                        future: getUserInfo(topComment['commenter']),
                                         builder: (context, userSnapshot) {
                                           if (userSnapshot.connectionState == ConnectionState.waiting) {
                                             return ListTile(
@@ -77,11 +92,11 @@ class Home extends StatelessWidget {
                                                 backgroundImage: AssetImage('assets/images/Avatars/default.png'),
                                               ),
                                               title: Text('Loading username...'),
-                                              subtitle: Text(comments[commentIndex]['text']),
+                                              subtitle: Text(topComment['text']),
                                             );
                                           }
                                           return StreamBuilder<DocumentSnapshot>(
-                                            stream: FirebaseFirestore.instance.collection('votes').doc(comments[commentIndex].id).snapshots(),
+                                            stream: FirebaseFirestore.instance.collection('votes').doc(topComment.id).snapshots(),
                                             builder: (context, voteSnapshot) {
                                               if (!voteSnapshot.hasData) {
                                                 return ListTile(
@@ -89,7 +104,7 @@ class Home extends StatelessWidget {
                                                     backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
                                                   ),
                                                   title: Text(userSnapshot.data!['username'] ?? 'Unknown User'),
-                                                  subtitle: Text(comments[commentIndex]['text']),
+                                                  subtitle: Text(topComment['text']),
                                                   trailing: Row(
                                                     mainAxisSize: MainAxisSize.min,
                                                     children: [
@@ -108,14 +123,14 @@ class Home extends StatelessWidget {
                                                   backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
                                                 ),
                                                 title: Text(userSnapshot.data!['username'] ?? 'Unknown User'),
-                                                subtitle: Text(comments[commentIndex]['text']),
+                                                subtitle: Text(topComment['text']),
                                                 trailing: Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     FirebaseAuth.instance.currentUser != null ? IconButton(
                                                       icon: Image.asset(hasVoted ? 'assets/images/Emojis/laughing.png' : 'assets/images/Emojis/sleeping.png', width: 24),
                                                       onPressed: () {
-                                                        upvoteComment(comments[commentIndex].id, FirebaseAuth.instance.currentUser!.uid);
+                                                        upvoteComment(topComment.id, FirebaseAuth.instance.currentUser!.uid);
                                                       },
                                                     ) : Image.asset('assets/images/Emojis/sleeping.png', width: 24),
                                                     SizedBox(width: 8), // Space between icon and text
@@ -131,6 +146,16 @@ class Home extends StatelessWidget {
                                   );
                                 },
                               ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => AllComments(imageUrl: items[index]['imageUrl'], imageId: items[index].id)),
+                                  );
+                                },
+                                child: Text('All comments...', style: TextStyle(color: Colors.blue)),
+                              ),
+                              SizedBox(height: 8),
                               FirebaseAuth.instance.currentUser != null ? TextField(
                                 controller: commentController,
                                 decoration: InputDecoration(
@@ -142,7 +167,7 @@ class Home extends StatelessWidget {
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30.0),
-                                    borderSide: BorderSide(width: 0.5, color: Colors.grey), // Thinner and grey border when not focused
+                                    borderSide: BorderSide(width: 0.5, color: const Color.fromARGB(255, 30, 30, 30)), // Thinner and grey border when not focused
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30.0),
@@ -160,10 +185,10 @@ class Home extends StatelessWidget {
                                   ),
                                 ),
                               ) : SizedBox.shrink(),
+                              Divider(height: 20, thickness: 10, color: Colors.black), // Divider between posts
                             ],
                           ),
                         ),
-                        Divider(height: 20, thickness: 10, color: Colors.black), // Divider between posts
                       ],
                     );
                   },
@@ -235,5 +260,18 @@ class Home extends StatelessWidget {
         'avatar': 'assets/images/Avatars/default.png',
       };
     }
+  }
+
+  Future<QueryDocumentSnapshot?> _getTopCommentByLikes(List<QueryDocumentSnapshot> comments) async {
+    QueryDocumentSnapshot? topComment;
+    int maxLikes = -1;
+    for (var comment in comments) {
+      final likeCount = await getVoteCount(comment.id);
+      if (likeCount > maxLikes) {
+        maxLikes = likeCount;
+        topComment = comment;
+      }
+    }
+    return topComment;
   }
 }
