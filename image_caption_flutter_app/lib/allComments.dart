@@ -15,7 +15,10 @@ class AllComments extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Image.network(imageUrl, width: double.infinity, height: 300, fit: BoxFit.cover),
+          GestureDetector(
+            onTap: () => showImagePreview(context, imageUrl), // Use the imageUrl passed to the AllComments widget
+            child: Image.network(imageUrl, width: double.infinity, height: 300, fit: BoxFit.cover),
+          ),
           Expanded(
             child: FutureBuilder<List<QueryDocumentSnapshot>>(
               future: fetchAndSortCommentsByLikes(imageId),
@@ -71,6 +74,31 @@ class AllComments extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void showImagePreview(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.all(10), // Adds padding around the dialog
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: InteractiveViewer( // Allows users to pinch-to-zoom
+              panEnabled: false, // Set it to false to prevent panning.
+              boundaryMargin: EdgeInsets.all(80),
+              minScale: 0.5,
+              maxScale: 4,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
