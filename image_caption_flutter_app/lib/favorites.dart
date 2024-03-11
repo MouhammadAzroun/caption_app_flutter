@@ -1,17 +1,136 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'allComments.dart';
 
 class Favorites extends StatelessWidget {
   const Favorites({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favorites'),
       ),
-      body: const Center(
-        child: Text('Welcome to the Favorites Page!'),
-      ),
+      body: userId == null
+          ? Center(child: Text('Please log in to view favorites.'))
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('favorites')
+                  .doc(userId)
+                  .collection(userId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                final favoriteIds = snapshot.data?.docs.map((doc) => doc.id).toList() ?? [];
+
+                return ListView.builder(
+                  itemCount: favoriteIds.length,
+                  itemBuilder: (context, index) {
+                    return FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance.collection('images').doc(favoriteIds[index]).get(),
+                      builder: (context, itemSnapshot) {
+                        if (itemSnapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+
+                        if (!itemSnapshot.hasData) {
+                          return ListTile(
+                            title: Text('Item not found'),
+                          );
+                        }
+
+                        final itemData = itemSnapshot.data!.data() as Map<String, dynamic>;
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => AllComments(imageUrl: itemData['imageUrl'], imageId: favoriteIds[index])),
+                            );
+                          },
+                          child: Card(
+                            elevation: 5, // Adds shadow
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15), // Rounded corners
+                            ),
+                            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5), // Adjust margin as in profile.dart
+                            color: Colors.white, // Set card color if specified in profile.dart
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(15),
+                                    bottomLeft: Radius.circular(15),
+                                  ),
+                                  child: Image.network(itemData['imageUrl'], width: 100, height: 100, fit: BoxFit.cover),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        FutureBuilder<Map<String, String>>(
+                                          future: getUserInfo(itemData['uploader']),
+                                          builder: (BuildContext context, AsyncSnapshot<Map<String, String>> snapshot) {
+                                            if (snapshot.connectionState == ConnectionState.waiting) {
+                                              return Text('Loading...', style: TextStyle(fontWeight: FontWeight.bold));
+                                            } else if (snapshot.hasError) {
+                                              return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red));
+                                            } else {
+                                              return Text(snapshot.data!['username'] ?? 'Unknown User', style: TextStyle(fontWeight: FontWeight.bold));
+                                            }
+                                          },
+                                        ),
+                                        SizedBox(height: 5),
+                                        Text('Tap to view comments', style: TextStyle(color: Colors.grey)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.remove_circle_outline, color: Colors.red),
+                                  onPressed: () => removeFavorite(favoriteIds[index]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
     );
+  }
+
+  Future<Map<String, String>> getUserInfo(String userId) async {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      Map<String, dynamic> userData = userDoc.data()! as Map<String, dynamic>;
+      return {
+        'username': userData['username'] ?? 'Unknown User',
+        'avatar': userData['avatar'] ?? 'assets/images/Avatars/default.png',
+      };
+    } else {
+      return {
+        'username': 'Unknown User',
+        'avatar': 'assets/images/Avatars/default.png',
+      };
+    }
+  }
+
+  Future<void> removeFavorite(String imageId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    await FirebaseFirestore.instance.collection('favorites').doc(userId).collection(userId).doc(imageId).delete();
   }
 }
