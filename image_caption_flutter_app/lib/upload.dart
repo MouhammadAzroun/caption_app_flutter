@@ -85,59 +85,66 @@ class _UploadState extends State<Upload> {
         elevation: 0,
       ),
       body: Container(
+        padding: EdgeInsets.all(20),
         width: double.infinity,
-        decoration: BoxDecoration(),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: pickImage,
-                    child: _imageFile == null
-                        ? Image.asset(
-                            'assets/images/Upload/upload.png',
-                            width: 300,
-                            height: 300,
-                          )
-                        : Image.file(
-                            _imageFile!,
-                            width: 300,
-                            height: 300,
-                          ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Select an Image',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+            GestureDetector(
+              onTap: pickImage,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white, // Light shade for the container
+                  borderRadius: BorderRadius.circular(100), // Circular shape
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: Offset(0, 3), // changes position of shadow
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Your image will be stored securely.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                child: _imageFile == null
+                    ? Icon(
+                        Icons.camera_alt,
+                        color: Colors.blue,
+                        size: 50,
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(100),
+                        child: Image.file(
+                          _imageFile!,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: ElevatedButton.icon(
-                onPressed: uploadImageToFirestore,
-                icon: Icon(Icons.cloud_upload),
-                label: Text('Upload Image'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            SizedBox(height: 30),
+            Text(
+              'Tap to select an image',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: uploadImageToFirestore,
+              icon: Icon(Icons.cloud_upload),
+              label: Text('Upload Image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Button color
+                foregroundColor: Colors.white, // Text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
               ),
             ),
           ],

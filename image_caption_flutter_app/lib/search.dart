@@ -59,7 +59,7 @@ class _SearchState extends State<Search> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SearchedUser(user: user)),
+                          MaterialPageRoute(builder: (context) => SearchedUser(user: user, userId: users[index].id)),
                         );
                       },
                       child: ListTile(
@@ -79,4 +79,3 @@ class _SearchState extends State<Search> {
     );
   }
 }
-
