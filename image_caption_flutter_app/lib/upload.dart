@@ -81,7 +81,7 @@ class _UploadState extends State<Upload> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upload Image'),
+        title: const Text('Publish Image'),
         elevation: 0,
       ),
       body: Container(
@@ -137,7 +137,7 @@ class _UploadState extends State<Upload> {
             ElevatedButton.icon(
               onPressed: uploadImageToFirestore,
               icon: Icon(Icons.cloud_upload),
-              label: Text('Upload Image'),
+              label: Text('Publish Image'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue, // Button color
                 foregroundColor: Colors.white, // Text color

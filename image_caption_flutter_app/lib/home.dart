@@ -172,7 +172,7 @@ class Home extends StatelessWidget {
                                           MaterialPageRoute(builder: (context) => AllComments(imageUrl: items[index]['imageUrl'], imageId: items[index].id)),
                                         );
                                       },
-                                      child: Text('All comments...', style: TextStyle(color: Colors.blue)),
+                                      child: Text('All captions...', style: TextStyle(color: Colors.blue)),
                                     ),
                                     SizedBox(height: 8),
                                     Padding(
