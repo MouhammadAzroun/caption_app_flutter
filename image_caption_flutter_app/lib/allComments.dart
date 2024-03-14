@@ -11,7 +11,7 @@ class AllComments extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All comments'),
+        title: const Text('All captions'),
       ),
       body: Column(
         children: [

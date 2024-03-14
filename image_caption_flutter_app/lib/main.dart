@@ -8,7 +8,7 @@ import 'upload.dart';
 import 'favorites.dart';
 import 'login.dart';
 import 'home.dart';
-import 'profile.dart'; // Assuming you have a Profile widget
+import 'profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      debugShowCheckedModeBanner: false, // Add this line
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -97,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
-            label: 'Upload',
+            label: 'Publish',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
