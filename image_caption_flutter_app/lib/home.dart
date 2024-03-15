@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'allComments.dart';
+import 'searchedUser.dart'; // Import SearchedUser page
 
 class Home extends StatelessWidget {
   Home({super.key});
@@ -62,11 +63,21 @@ class Home extends StatelessWidget {
                                             title: Text('Loading username...'),
                                           );
                                         }
-                                        return ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundImage: AssetImage(snapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
+                                        return GestureDetector(
+                                          onTap: () {
+                                            fetchUserDataById(items[index]['uploader']).then((userData) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(builder: (context) => SearchedUser(user: userData, userId: items[index]['uploader'])),
+                                              );
+                                            });
+                                          },
+                                          child: ListTile(
+                                            leading: CircleAvatar(
+                                              backgroundImage: AssetImage(snapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
+                                            ),
+                                            title: Text(snapshot.data!['username'] ?? 'Unknown User'),
                                           ),
-                                          title: Text(snapshot.data!['username'] ?? 'Unknown User'),
                                         );
                                       },
                                     ),
@@ -114,10 +125,40 @@ class Home extends StatelessWidget {
                                                     subtitle: Text(topComment['text']),
                                                   );
                                                 }
-                                                return StreamBuilder<DocumentSnapshot>(
-                                                  stream: FirebaseFirestore.instance.collection('votes').doc(topComment.id).snapshots(),
-                                                  builder: (context, voteSnapshot) {
-                                                    if (!voteSnapshot.hasData) {
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    fetchUserDataById(topComment['commenter']).then((userData) {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => SearchedUser(user: userData, userId: topComment['commenter']),
+                                                        ),
+                                                      );
+                                                    });
+                                                  },
+                                                  child: StreamBuilder<DocumentSnapshot>(
+                                                    stream: FirebaseFirestore.instance.collection('votes').doc(topComment.id).snapshots(),
+                                                    builder: (context, voteSnapshot) {
+                                                      if (!voteSnapshot.hasData) {
+                                                        return ListTile(
+                                                          leading: CircleAvatar(
+                                                            backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
+                                                          ),
+                                                          title: Text(userSnapshot.data!['username'] ?? 'Unknown User'),
+                                                          subtitle: Text(topComment['text']),
+                                                          trailing: Row(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Image.asset('assets/images/Emojis/sleeping.png', width: 24), // Default sleeping image
+                                                              SizedBox(width: 8), // Space between icon and text
+                                                              Text('...', style: TextStyle(fontWeight: FontWeight.bold)), // Placeholder for votes count
+                                                            ],
+                                                          ),
+                                                        );
+                                                      }
+                                                      Map<String, dynamic> votes = voteSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                                                      int voteCount = votes.length;
+                                                      bool hasVoted = votes.containsKey(FirebaseAuth.instance.currentUser?.uid);
                                                       return ListTile(
                                                         leading: CircleAvatar(
                                                           backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
@@ -127,37 +168,19 @@ class Home extends StatelessWidget {
                                                         trailing: Row(
                                                           mainAxisSize: MainAxisSize.min,
                                                           children: [
-                                                            Image.asset('assets/images/Emojis/sleeping.png', width: 24), // Default sleeping image
+                                                            FirebaseAuth.instance.currentUser != null ? IconButton(
+                                                              icon: Image.asset(hasVoted ? 'assets/images/Emojis/laughing.png' : 'assets/images/Emojis/sleeping.png', width: 24),
+                                                              onPressed: () {
+                                                                upvoteComment(topComment.id, FirebaseAuth.instance.currentUser!.uid);
+                                                              },
+                                                            ) : Image.asset('assets/images/Emojis/sleeping.png', width: 24),
                                                             SizedBox(width: 8), // Space between icon and text
-                                                            Text('...', style: TextStyle(fontWeight: FontWeight.bold)), // Placeholder for votes count
+                                                            Text('$voteCount', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)), // Modern styled vote count
                                                           ],
                                                         ),
                                                       );
-                                                    }
-                                                    Map<String, dynamic> votes = voteSnapshot.data!.data() as Map<String, dynamic>? ?? {};
-                                                    int voteCount = votes.length;
-                                                    bool hasVoted = votes.containsKey(FirebaseAuth.instance.currentUser?.uid);
-                                                    return ListTile(
-                                                      leading: CircleAvatar(
-                                                        backgroundImage: AssetImage(userSnapshot.data!['avatar'] ?? 'assets/images/Avatars/default.png'),
-                                                      ),
-                                                      title: Text(userSnapshot.data!['username'] ?? 'Unknown User'),
-                                                      subtitle: Text(topComment['text']),
-                                                      trailing: Row(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          FirebaseAuth.instance.currentUser != null ? IconButton(
-                                                            icon: Image.asset(hasVoted ? 'assets/images/Emojis/laughing.png' : 'assets/images/Emojis/sleeping.png', width: 24),
-                                                            onPressed: () {
-                                                              upvoteComment(topComment.id, FirebaseAuth.instance.currentUser!.uid);
-                                                            },
-                                                          ) : Image.asset('assets/images/Emojis/sleeping.png', width: 24),
-                                                          SizedBox(width: 8), // Space between icon and text
-                                                          Text('$voteCount', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)), // Modern styled vote count
-                                                        ],
-                                                      ),
-                                                    );
-                                                  },
+                                                    },
+                                                  ),
                                                 );
                                               },
                                             );
@@ -360,5 +383,17 @@ class Home extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<Map<String, dynamic>> fetchUserDataById(String userId) async {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      return userDoc.data()! as Map<String, dynamic>;
+    } else {
+      return {
+        'username': 'Unknown User',
+        'avatar': 'assets/images/Avatars/default.png',
+      };
+    }
   }
 }
