@@ -17,23 +17,23 @@ class Favorites extends StatelessWidget {
       body: userId == null
           ? Center(child: Text('Please log in to view favorites.'))
           : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('favorites')
-                  .doc(userId)
-                  .collection(userId)
-                  .snapshots(),
+              stream: FirebaseFirestore.instance.collection('favorites').snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
 
-                final favoriteIds = snapshot.data?.docs.map((doc) => doc.id).toList() ?? [];
+                final favoriteDocs = snapshot.data?.docs.where((doc) {
+                  final docData = doc.data() as Map<String, dynamic>?; // Explicitly cast to Map<String, dynamic>
+                  return docData?.containsKey(userId) == true && docData![userId] == true;
+                }).toList() ?? [];
 
                 return ListView.builder(
-                  itemCount: favoriteIds.length,
+                  itemCount: favoriteDocs.length,
                   itemBuilder: (context, index) {
+                    final favoriteId = favoriteDocs[index].id;
                     return FutureBuilder<DocumentSnapshot>(
-                      future: FirebaseFirestore.instance.collection('images').doc(favoriteIds[index]).get(),
+                      future: FirebaseFirestore.instance.collection('images').doc(favoriteId).get(),
                       builder: (context, itemSnapshot) {
                         if (itemSnapshot.connectionState == ConnectionState.waiting) {
                           return Center(child: CircularProgressIndicator());
@@ -51,7 +51,7 @@ class Favorites extends StatelessWidget {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => AllComments(imageUrl: itemData['imageUrl'], imageId: favoriteIds[index])),
+                              MaterialPageRoute(builder: (context) => AllComments(imageUrl: itemData['imageUrl'], imageId: favoriteId)),
                             );
                           },
                           child: Card(
@@ -96,7 +96,7 @@ class Favorites extends StatelessWidget {
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.remove_circle_outline, color: Colors.red),
-                                  onPressed: () => removeFavorite(favoriteIds[index]),
+                                  onPressed: () => removeFavorite(favoriteId),
                                 ),
                               ],
                             ),
@@ -131,6 +131,10 @@ class Favorites extends StatelessWidget {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
-    await FirebaseFirestore.instance.collection('favorites').doc(userId).collection(userId).doc(imageId).delete();
+    final docRef = FirebaseFirestore.instance.collection('favorites').doc(imageId);
+    final doc = await docRef.get();
+    if (doc.exists && doc.data()![userId] == true) {
+      await docRef.update({userId: FieldValue.delete()});
+    }
   }
 }

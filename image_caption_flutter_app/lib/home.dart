@@ -240,16 +240,16 @@ class Home extends StatelessWidget {
                           top: 0,
                           right: 0,
                           child: StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseAuth.instance.currentUser?.uid != null ? FirebaseFirestore.instance.collection('favorites').doc(FirebaseAuth.instance.currentUser!.uid).collection(FirebaseAuth.instance.currentUser!.uid).doc(items[index].id).snapshots() : Stream.empty(),
+                            stream: FirebaseAuth.instance.currentUser?.uid != null ? FirebaseFirestore.instance.collection('favorites').doc(items[index].id).snapshots() : Stream.empty(),
                             builder: (context, snapshot) {
                               if (snapshot.hasData && snapshot.data!.exists) {
-                                // If the document exists, it means the image is favorited, so use the filled heart icon
+                                Map<String, dynamic> favorites = snapshot.data!.data() as Map<String, dynamic>;
+                                bool isFavorited = favorites.containsKey(FirebaseAuth.instance.currentUser!.uid) && favorites[FirebaseAuth.instance.currentUser!.uid] == true;
                                 return IconButton(
-                                  icon: Icon(Icons.favorite, color: Colors.red),
+                                  icon: Icon(isFavorited ? Icons.favorite : Icons.favorite_border, color: isFavorited ? Colors.red : Color.fromARGB(255, 173, 173, 173)),
                                   onPressed: () => toggleFavorite(items[index].id),
                                 );
                               } else {
-                                // If the document does not exist, it means the image is not favorited, so use the border heart icon
                                 return IconButton(
                                   icon: Icon(Icons.favorite_border, color: Color.fromARGB(255, 173, 173, 173)),
                                   onPressed: () => toggleFavorite(items[index].id),
@@ -348,15 +348,21 @@ class Home extends StatelessWidget {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
-    final docRef = FirebaseFirestore.instance.collection('favorites').doc(userId).collection(userId).doc(imageId);
+    final docRef = FirebaseFirestore.instance.collection('favorites').doc(imageId);
 
     final doc = await docRef.get();
     if (doc.exists) {
-      // If it exists, remove it (unfavorite)
-      await docRef.delete();
+      // Check if the current user has already favorited the image
+      if (doc.data()![userId] == true) {
+        // If yes, remove the favorite by deleting the user's ID from the document
+        await docRef.update({userId: FieldValue.delete()});
+      } else {
+        // If not, add the favorite by setting the user's ID to true
+        await docRef.update({userId: true});
+      }
     } else {
-      // If it doesn't exist, add it (favorite)
-      await docRef.set({'imageId': true});
+      // If the document doesn't exist, create it and set the user's ID to true
+      await docRef.set({userId: true});
     }
   }
 

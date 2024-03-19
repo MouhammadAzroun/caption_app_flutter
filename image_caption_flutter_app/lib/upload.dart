@@ -30,14 +30,41 @@ class _UploadState extends State<Upload> {
   Future<void> uploadImageToFirestore() async {
     if (_imageFile != null) {
       try {
+        // Show the loading dialog with upload.gif
+        showDialog(
+          context: context,
+          barrierDismissible: false, // User must not dismiss the dialog by tapping outside of it
+          builder: (BuildContext context) {
+            return Dialog(
+              child: Container(
+                padding: EdgeInsets.all(20),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset('assets/images/Upload/upload.gif', width: 100, height: 100), // You can replace this with your gif
+                    SizedBox(width: 10),
+                    Text("Uploading...", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+
         String userId = FirebaseAuth.instance.currentUser!.uid;
         String fileName = 'images/${DateTime.now().millisecondsSinceEpoch}_$userId.jpg';
         TaskSnapshot snapshot = await FirebaseStorage.instance.ref(fileName).putFile(_imageFile!);
         String imageUrl = await snapshot.ref.getDownloadURL();
         await saveImageUrl(imageUrl, userId);
+
+        // Dismiss the loading dialog
+        Navigator.of(context, rootNavigator: true).pop();
+
         // After successful upload, show the alert dialog
         _showUploadSuccessDialog();
       } catch (e) {
+        // If there's an error, dismiss the loading dialog and show an error message
+        Navigator.of(context, rootNavigator: true).pop();
         print(e);
       }
     }
@@ -49,8 +76,19 @@ class _UploadState extends State<Upload> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Upload Complete'),
-          content: Text('Your picture has been published.'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Upload Complete'),
+              Image.asset('assets/images/Upload/checkmark.gif', width: 70, height: 35),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Your picture has been published successfully.'),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
               child: Text('OK'),
