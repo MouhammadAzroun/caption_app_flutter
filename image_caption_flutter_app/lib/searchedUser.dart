@@ -14,12 +14,17 @@ class SearchedUser extends StatelessWidget {
         .collection('images')
         .where('uploader', isEqualTo: userId)
         .get();
-    return querySnapshot.docs
+    var images = querySnapshot.docs
         .map((doc) => {
               ...doc.data() as Map<String, dynamic>,
               'id': doc.id, // Include the document ID
              })
         .toList();
+
+    // Sort images by timestamp in descending order
+    images.sort((a, b) => (b['timestamp'] as Timestamp).compareTo(a['timestamp'] as Timestamp));
+
+    return images;
   }
 
   @override
