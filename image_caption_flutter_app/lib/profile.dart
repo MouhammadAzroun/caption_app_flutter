@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'main.dart';
+import 'myPosts.dart';
 
 class Profile extends StatefulWidget {
   final Function(String) onAvatarUpdated;
@@ -157,6 +158,25 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        actions: <Widget>[
+          PopupMenuButton<int>(
+            onSelected: (item) => onSelected(context, item),
+            itemBuilder: (context) => [
+              PopupMenuItem<int>(
+                value: 0,
+                child: Text('My posts'),
+              ),
+              PopupMenuItem<int>(
+                value: 1,
+                child: Text('Sign Out'),
+              ),
+              PopupMenuItem<int>(
+                value: 2,
+                child: Text('Delete Account'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Center(
         child: userData == null
@@ -241,97 +261,114 @@ class _ProfileState extends State<Profile> {
                       ),
                     ),
                     SizedBox(height: 20), // Add some spacing
-                    ElevatedButton(
-                      onPressed: () async {
-                        await FirebaseAuth.instance.signOut();
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MyHomePage()),
-                          (Route<dynamic> route) => false,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent, // Use a more vibrant blue
-                        foregroundColor: Colors.white, // Ensure text is white
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.0), // Rounded corners
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10), // Adjust padding
-                        textStyle: TextStyle(
-                          fontSize: 16, // Adjust font size
-                          fontWeight: FontWeight.bold, // Make text bold
-                        ),
-                      ),
-                      child: const Text('Sign Out'),
-                    ),
-                    SizedBox(height: 20), // Add some spacing
-                    ElevatedButton(
-                      onPressed: () async {
-                        final shouldDelete = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            backgroundColor: Colors.white, // Added white background
-                            title: const Text('Delete Account'),
-                            content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
-                                child: Text('Cancel', style: TextStyle(color: Colors.blue[800]!)),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(true),
-                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        ) ?? false;
-
-                        if (shouldDelete) {
-                          User? user = FirebaseAuth.instance.currentUser;
-                          if (user != null) {
-                            try {
-                              // First, delete the user data from Firestore
-                              await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-                              
-                              // Then, delete the user account from Firebase Authentication
-                              await user.delete();
-                              
-                              // After deleting both the user data and account, sign out the user
-                              await FirebaseAuth.instance.signOut();
-                              
-                              // Finally, navigate the user back to the MyHomePage or a login screen
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MyHomePage()),
-                                (Route<dynamic> route) => false,
-                              );
-                            } catch (e) {
-                              print("Error deleting account and user data: $e");
-                              // Handle errors, such as showing an error message to the user
-                            }
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent, // Use a red color for delete action
-                        foregroundColor: Colors.white, // Ensure text is white
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.0), // Rounded corners
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10), // Adjust padding
-                        textStyle: TextStyle(
-                          fontSize: 16, // Adjust font size
-                          fontWeight: FontWeight.bold, // Make text bold
-                        ),
-                      ),
-                      child: const Text('Delete Account'),
-                    ),
-                    SizedBox(height: 20), // Add some spacing
                   ],
                 ),
               ),
       ),
     );
+  }
+
+  Widget _buildProfileStat(String title, String count) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          count,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          title,
+          style: TextStyle(fontSize: 16),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildClickablePost(BuildContext context, String title) {
+    return InkWell(
+      onTap: () {
+        // Navigate to the user's posts page
+        // Navigator.push(context, MaterialPageRoute(builder: (context) => UserPostsPage()));
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.post_add, size: 24, color: Colors.blue), // Changed icon color to blue
+          Text(
+            title,
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void onSelected(BuildContext context, int item) {
+    switch (item) {
+      case 0:
+        Navigator.push(context, MaterialPageRoute(builder: (context) => MyPosts()));
+        break;
+      case 1:
+        signOut(context);
+        break;
+      case 2:
+        confirmDeleteAccount(context);
+        break;
+    }
+  }
+
+  Future<void> signOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const MyHomePage()),
+      (Route<dynamic> route) => false,
+    );
+  }
+
+  void confirmDeleteAccount(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(true);
+              await deleteAccount(context);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (shouldDelete) {
+      await deleteAccount(context);
+    }
+  }
+
+  Future<void> deleteAccount(BuildContext context) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+        await user.delete();
+        await FirebaseAuth.instance.signOut();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MyHomePage()),
+          (Route<dynamic> route) => false,
+        );
+      } catch (e) {
+        print("Error deleting account and user data: $e");
+      }
+    }
   }
 
   Future<void> _changePassword(BuildContext context) async {
