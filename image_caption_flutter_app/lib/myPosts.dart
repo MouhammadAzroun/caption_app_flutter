@@ -33,7 +33,10 @@ class _MyPostsState extends State<MyPosts> {
       }
     }
 
-    // After fetching images, sort and group them by date
+    // Sort images by timestamp in descending order before grouping
+    images.sort((a, b) => (b['timestamp'] as Timestamp).compareTo(a['timestamp'] as Timestamp));
+
+    // After fetching and sorting images, group them by date
     final Map<String, List<Map<String, dynamic>>> groupedImages = {};
     for (var image in images) {
       final timestamp = image['timestamp'] as Timestamp;

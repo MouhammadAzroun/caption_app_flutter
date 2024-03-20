@@ -224,6 +224,10 @@ class Home extends StatelessWidget {
                                               if (commentController.text.trim().isNotEmpty && currentUser != null) {
                                                 addComment(items[index].id, commentController.text.trim(), currentUser.uid);
                                                 commentController.clear(); // Clear the text field after submitting
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Caption submitted.')),
+                                                );
+                                                FocusScope.of(context).unfocus();
                                               }
                                             },
                                           ),
