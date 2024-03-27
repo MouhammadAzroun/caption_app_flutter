@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'searchedUser.dart'; 
 
-class AllComments extends StatelessWidget {
+class AllComments extends StatefulWidget {
   final String imageUrl;
   final String imageId;
-  final TextEditingController commentController = TextEditingController();
 
   AllComments({super.key, required this.imageUrl, required this.imageId});
+
+  @override
+  _AllCommentsState createState() => _AllCommentsState();
+}
+
+class _AllCommentsState extends State<AllComments> {
+  final TextEditingController commentController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,49 +26,52 @@ class AllComments extends StatelessWidget {
       body: Column(
         children: [
           GestureDetector(
-            onTap: () => showImagePreview(context, imageUrl), // Use the imageUrl passed to the AllComments widget
-            child: Image.network(imageUrl, width: double.infinity, height: 300, fit: BoxFit.cover),
+            onTap: () => showImagePreview(context, widget.imageUrl), // Use the imageUrl passed to the AllComments widget
+            child: Image.network(widget.imageUrl, width: double.infinity, height: 300, fit: BoxFit.cover),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('comments').doc(imageId).collection('imageComments').orderBy('timestamp').snapshots(),
+            child: FutureBuilder<List<QueryDocumentSnapshot>>(
+              future: fetchAndSortCommentsByLikes(widget.imageId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
-                final comments = snapshot.data!.docs;
+                final comments = snapshot.data!;
                 return ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, index) {
-                    final comment = comments[index];
+                    final commentData = comments[index].data() as Map<String, dynamic>;
                     return FutureBuilder<Map<String, String>>(
-                      future: getUserInfo(comment['commenter']),
+                      future: getUserInfo(commentData['commenter']),
                       builder: (context, userSnapshot) {
                         if (userSnapshot.connectionState == ConnectionState.waiting) {
                           return CircularProgressIndicator();
                         }
                         return GestureDetector(
                           onTap: () {
-                            fetchUserDataById(comment['commenter']).then((userData) {
+                            fetchUserDataById(commentData['commenter']).then((userData) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => SearchedUser(user: userData, userId: comment['commenter']),
+                                  builder: (context) => SearchedUser(user: userData, userId: commentData['commenter']),
                                 ),
                               );
                             });
+                          },
+                          onLongPress: () {
+                            _showCommentOptions(context, comments[index].id, commentData['text'], widget.imageId, commentData['commenter']);
                           },
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundImage: AssetImage(userSnapshot.data!['avatar']!),
                             ),
                             title: Text(userSnapshot.data!['username'] ?? 'Unknown'),
-                            subtitle: Text(comment['text'] ?? ''),
+                            subtitle: Text(commentData['text'] ?? ''),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 StreamBuilder<DocumentSnapshot>(
-                                  stream: FirebaseFirestore.instance.collection('votes').doc(comment.id).snapshots(),
+                                  stream: FirebaseFirestore.instance.collection('votes').doc(comments[index].id).snapshots(),
                                   builder: (context, voteSnapshot) {
                                     if (!voteSnapshot.hasData) {
                                       return Text('...');
@@ -74,17 +84,13 @@ class AllComments extends StatelessWidget {
                                       children: [
                                         IconButton(
                                           icon: hasVoted ? Image.asset('assets/images/Emojis/laughing.png', width: 24) : Image.asset('assets/images/Emojis/sleeping.png', width: 24),
-                                          onPressed: () => upvoteComment(comment.id, FirebaseAuth.instance.currentUser!.uid),
+                                          onPressed: () => upvoteComment(comments[index].id, FirebaseAuth.instance.currentUser!.uid),
                                         ),
                                         Text('$voteCount'),
                                       ],
                                     );
                                   },
                                 ),
-                                FirebaseAuth.instance.currentUser?.uid == comment['commenter'] ? IconButton(
-                                  icon: Icon(Icons.more_vert),
-                                  onPressed: () => _showCommentOptions(context, comment.id, comment['text'], imageId),
-                                ) : Container(),
                               ],
                             ),
                           ),
@@ -120,12 +126,13 @@ class AllComments extends StatelessWidget {
                   onPressed: () {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     if (commentController.text.trim().isNotEmpty && currentUser != null) {
-                      addComment(imageId, commentController.text.trim(), currentUser.uid);
+                      addComment(widget.imageId, commentController.text.trim(), currentUser.uid);
                       commentController.clear(); // Clear the text field after submitting
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Caption submitted.')),
                       );
                       FocusScope.of(context).unfocus(); // Dismiss the keyboard
+                      setState(() {}); // Refresh the comments list
                     }
                   },
                 ),
@@ -235,30 +242,52 @@ class AllComments extends StatelessWidget {
     });
   }
 
-  void _showCommentOptions(BuildContext context, String commentId, String currentText, String imageId) {
+  void _showCommentOptions(BuildContext context, String commentId, String currentText, String imageId, String commenterId) {
+    final currentUser = FirebaseAuth.instance.currentUser;
     showModalBottomSheet(
       context: context,
       builder: (BuildContext bc) {
+        List<Widget> options = [];
+        
+        // Check if the current user is the commenter
+        if (currentUser?.uid == commenterId) {
+          options.addAll([
+            ListTile(
+              leading: Icon(Icons.edit),
+              title: Text('Edit'),
+              onTap: () {
+                Navigator.pop(context);
+                _editComment(context, commentId, currentText, imageId);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete),
+              title: Text('Delete'),
+              onTap: () {
+                Navigator.pop(context);
+                _deleteComment(imageId, commentId);
+              },
+            ),
+          ]);
+        }
+        
+        // Add the Copy option for all users
+        options.add(ListTile(
+          leading: Icon(Icons.copy),
+          title: Text('Copy'),
+          onTap: () {
+            Navigator.pop(context);
+            Clipboard.setData(ClipboardData(text: currentText)).then((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Comment copied to clipboard.')),
+              );
+            });
+          },
+        ));
+        
         return SafeArea(
           child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.edit),
-                title: Text('Edit'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _editComment(context, commentId, currentText, imageId);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.delete),
-                title: Text('Delete'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteComment(imageId, commentId);
-                },
-              ),
-            ],
+            children: options,
           ),
         );
       },
@@ -298,10 +327,12 @@ class AllComments extends StatelessWidget {
       await FirebaseFirestore.instance.collection('comments').doc(imageId).collection('imageComments').doc(commentId).update({
         'text': newText.trim(),
       });
+      setState(() {}); // Refresh the comments list
     }
   }
 
   Future<void> _deleteComment(String imageId, String commentId) async {
     await FirebaseFirestore.instance.collection('comments').doc(imageId).collection('imageComments').doc(commentId).delete();
+    setState(() {}); // Refresh the comments list
   }
 }
