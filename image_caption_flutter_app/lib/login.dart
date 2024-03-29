@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'createAccount.dart';
 import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart'; // This line is removed
 import 'main.dart';
 
 class Login extends StatefulWidget {
@@ -13,40 +12,30 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  bool _passwordVisible = false; // Add this line
+  bool _passwordVisible = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    // Define a blue color theme
+    
     Color blueThemeColor = Colors.blue.shade300;
     TextStyle linkStyle = TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.bold);
 
     return Scaffold(
-      // Use a gradient background
+      
       body: Container(
-        // decoration: BoxDecoration(
-        //   gradient: LinearGradient(
-        //     begin: Alignment.topRight,
-        //     end: Alignment.bottomLeft,
-        //     colors: [
-        //       Colors.blue.shade50,
-        //       Colors.blue.shade100,
-        //     ],
-        //   ),
-        // ),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // App logo or name
+                
                 const FlutterLogo(size: 100),
                 const SizedBox(height: 30.0),
 
-                // Email TextField
+                
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -59,10 +48,10 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 16.0),
 
-                // Password TextField
+                
                 TextField(
                   controller: _passwordController,
-                  obscureText: !_passwordVisible, // Use _passwordVisible here
+                  obscureText: !_passwordVisible,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: OutlineInputBorder(
@@ -84,20 +73,19 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 20.0),
 
-                // Login Button
+                
                 ElevatedButton(
                   onPressed: () async {
                     try {
-                      // Attempt to sign in the user with Firebase Authentication
+                      
                       await FirebaseAuth.instance.signInWithEmailAndPassword(
                         email: _emailController.text,
                         password: _passwordController.text,
                       );
-                      // Check if email is verified
+                      
                       var user = FirebaseAuth.instance.currentUser;
                       if (user != null && !user.emailVerified) {
-                        // If not verified, show a message or handle accordingly
-                        // For example, sign the user out and ask them to verify their email
+                        
                         await FirebaseAuth.instance.signOut();
                         // Show a message to the user about email verification
                       } else {
@@ -113,7 +101,7 @@ class _LoginState extends State<Login> {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          backgroundColor: Colors.white, // Set the background color to white
+                          backgroundColor: Colors.white,
                           title: const Text("Login Failed"),
                           content: Text(e.message ?? "An unknown error occurred"),
                           actions: <Widget>[
@@ -129,8 +117,8 @@ class _LoginState extends State<Login> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Button color
-                    foregroundColor: Colors.white, // Text color
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
@@ -142,7 +130,7 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 20.0),
 
-                // Sign up TextButton
+                
                 RichText(
                   text: TextSpan(
                     text: "Don't have an account? ",
@@ -153,7 +141,7 @@ class _LoginState extends State<Login> {
                         style: linkStyle,
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            // Navigate to createAccount.dart
+                            
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => const CreateAccount()),

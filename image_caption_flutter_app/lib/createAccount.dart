@@ -10,7 +10,7 @@ class CreateAccount extends StatefulWidget {
 }
 
 class _CreateAccountState extends State<CreateAccount> {
-  bool _passwordVisible = false; // Moved here
+  bool _passwordVisible = false;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -49,19 +49,19 @@ class _CreateAccountState extends State<CreateAccount> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Keep this to avoid resizing due to keyboard
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Create Account'),
       ),
-      body: Center( // Use Center to align everything in the middle
-        child: SingleChildScrollView( // Allows scrolling when the keyboard is visible
-          padding: const EdgeInsets.all(20.0), // Adjust padding as needed
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Center the column itself
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Center( // Center the stack in the middle of the screen
+              Center(
                 child: Stack(
-                  alignment: Alignment.bottomRight, // Position the edit icon at the bottom right of the avatar
+                  alignment: Alignment.bottomRight,
                   children: [
                     GestureDetector(
                       onTap: () {
@@ -77,15 +77,15 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.blue, // Match the icon button background to the theme or avatar ring
+                        color: Colors.blue,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white, // Add a white border for better visibility
+                          color: Colors.white,
                           width: 2,
                         ),
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.white), // Ensure icon color contrasts well with the background
+                        icon: const Icon(Icons.edit, color: Colors.white),
                         onPressed: () {
                           _showImagePicker(context);
                         },
@@ -157,7 +157,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
                       'username': _usernameController.text,
                       'email': _emailController.text,
-                      'avatar': _selectedImagePath, // Save the selected avatar's path
+                      'avatar': _selectedImagePath,
                     });
                     showDialog(
                       context: context,
@@ -187,7 +187,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        backgroundColor: Colors.white, // Set the background color to white
+                        backgroundColor: Colors.white,
                         title: const Text("Error"),
                         content: Text(e.toString()),
                         actions: <Widget>[
@@ -229,16 +229,16 @@ class _CreateAccountState extends State<CreateAccount> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // Set the background color to white
+          backgroundColor: Colors.white,
           title: Text("Choose an image"),
           content: Container(
-            height: 360, // Adjust height as necessary
+            height: 360,
             width: double.maxFinite,
             child: GridView.count(
               crossAxisCount: 3,
-              crossAxisSpacing: 8.0, // Space between columns
-              mainAxisSpacing: 8.0, // Space between rows
-              childAspectRatio: 1, // Aspect ratio for the children
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+              childAspectRatio: 1,
               children: <String>[
                 'assets/images/Avatars/bear.png',
                 'assets/images/Avatars/blond_woman.png',

@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Make sure to add this import for date formatting
-import 'AllComments.dart'; // Import AllComments
+import 'package:intl/intl.dart';
+import 'AllComments.dart';
 import 'package:vibration/vibration.dart';
 
 class MyPosts extends StatefulWidget {
@@ -27,8 +27,8 @@ class _MyPostsState extends State<MyPosts> {
 
       for (var doc in querySnapshot.docs) {
         var imageData = doc.data() as Map<String, dynamic>;
-        imageData['id'] = doc.id; // Ensure 'id' field is included
-        imageData['timestamp'] = doc['timestamp']; // Include the timestamp
+        imageData['id'] = doc.id; 
+        imageData['timestamp'] = doc['timestamp']; 
         images.add(imageData);
       }
     }
@@ -49,7 +49,6 @@ class _MyPostsState extends State<MyPosts> {
   Future<void> deleteImage(String imageId) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    // Delete the image
     await firestore.collection('images').doc(imageId).delete();
 
     // Delete all comments associated with the image
@@ -67,7 +66,6 @@ class _MyPostsState extends State<MyPosts> {
     // Trigger a state update to reflect changes in the UI
     setState(() {
       // This is a simple way to refresh the UI after deletion
-      // In a real app, you might want to fetch the data again or use a more sophisticated state management solution
     });
   }
 
@@ -110,25 +108,25 @@ class _MyPostsState extends State<MyPosts> {
                           child: Text(date, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         ),
                         GridView.count(
-                          crossAxisCount: 3, // Increase the number of columns to make cards smaller
+                          crossAxisCount: 3, 
                           crossAxisSpacing: 4.0,
                           mainAxisSpacing: 4.0,
                           shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(), // to disable GridView's scrolling
-                          childAspectRatio: 0.8, // Adjust the aspect ratio of the cards (width / height)
+                          physics: NeverScrollableScrollPhysics(), 
+                          childAspectRatio: 0.8, 
                           children: imagesForDate.map((image) {
                             return ImageCard(
                               key: ValueKey(image['id']),
                               image: image,
                               onDelete: () => deleteImage(image['id']),
                               onSelect: () {},
-                              isSelected: selectedCardId == image['id'], // Pass whether the card is selected
-                              updateSelectedCardId: (String? id) { // Add this block
+                              isSelected: selectedCardId == image['id'], 
+                              updateSelectedCardId: (String? id) { 
                                 setState(() {
                                   selectedCardId = id;
                                 });
                               },
-                              refreshPosts: refreshPosts, // Pass the callback here
+                              refreshPosts: refreshPosts, 
                             );
                           }).toList(),
                         ),
@@ -158,8 +156,8 @@ class ImageCard extends StatefulWidget {
   final VoidCallback onDelete;
   final VoidCallback onSelect;
   final bool isSelected;
-  final Function(String?) updateSelectedCardId; // Add this line
-  final Function refreshPosts; // Add this line
+  final Function(String?) updateSelectedCardId;
+  final Function refreshPosts;
 
   const ImageCard({
     Key? key,
@@ -167,8 +165,8 @@ class ImageCard extends StatefulWidget {
     required this.onDelete,
     required this.onSelect,
     required this.isSelected,
-    required this.updateSelectedCardId, // Add this line
-    required this.refreshPosts, // Add this line
+    required this.updateSelectedCardId,
+    required this.refreshPosts,
   }) : super(key: key);
 
   @override
@@ -176,7 +174,7 @@ class ImageCard extends StatefulWidget {
 }
 
 class _ImageCardState extends State<ImageCard> {
-  bool _isDeleteIconVisible = false; // Track visibility of the delete icon
+  bool _isDeleteIconVisible = false; 
 
   @override
   Widget build(BuildContext context) {
@@ -192,9 +190,9 @@ class _ImageCardState extends State<ImageCard> {
           ),
         ).then((_) {
           setState(() {
-            _isDeleteIconVisible = false; // Reset the delete icon visibility
+            _isDeleteIconVisible = false; 
           });
-          widget.refreshPosts(); // Call the refreshPosts method to refresh the UI in MyPosts
+          widget.refreshPosts(); 
         });
       },
       onLongPress: () async {
@@ -234,8 +232,8 @@ class _ImageCardState extends State<ImageCard> {
                       builder: (context) => AlertDialog(
                         title: Row(
                           children: [
-                            Image.asset('assets/images/Upload/trash_can.gif', width: 20, height: 20), // Add the trash can gif next to the title
-                            SizedBox(width: 8), // Add some spacing between the icon and the text
+                            Image.asset('assets/images/Upload/trash_can.gif', width: 20, height: 20),
+                            SizedBox(width: 8), 
                             Text('Confirm'),
                           ],
                         ),

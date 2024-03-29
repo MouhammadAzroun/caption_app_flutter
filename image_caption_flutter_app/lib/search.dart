@@ -27,7 +27,7 @@ class _SearchState extends State<Search> {
                 labelText: 'Search by username',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) {
+              onChanged: (value) { 
                 setState(() {
                   searchQuery = value;
                 });

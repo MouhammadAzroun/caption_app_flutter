@@ -24,7 +24,7 @@ class Favorites extends StatelessWidget {
                 }
 
                 final favoriteDocs = snapshot.data?.docs.where((doc) {
-                  final docData = doc.data() as Map<String, dynamic>?; // Explicitly cast to Map<String, dynamic>
+                  final docData = doc.data() as Map<String, dynamic>?;
                   return docData?.containsKey(userId) == true && docData![userId] == true;
                 }).toList() ?? [];
 
@@ -57,10 +57,10 @@ class Favorites extends StatelessWidget {
                           child: Card(
                             elevation: 5, // Adds shadow
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15), // Rounded corners
+                              borderRadius: BorderRadius.circular(15), 
                             ),
-                            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5), // Adjust margin as in profile.dart
-                            color: Colors.white, // Set card color if specified in profile.dart
+                            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5), 
+                            color: Colors.white,
                             child: Row(
                               children: [
                                 ClipRRect(

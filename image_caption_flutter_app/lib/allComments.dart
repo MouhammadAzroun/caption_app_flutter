@@ -26,7 +26,7 @@ class _AllCommentsState extends State<AllComments> {
       body: Column(
         children: [
           GestureDetector(
-            onTap: () => showImagePreview(context, widget.imageUrl), // Use the imageUrl passed to the AllComments widget
+            onTap: () => showImagePreview(context, widget.imageUrl),
             child: Image.network(widget.imageUrl, width: double.infinity, height: 300, fit: BoxFit.cover),
           ),
           Expanded(
@@ -127,12 +127,12 @@ class _AllCommentsState extends State<AllComments> {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     if (commentController.text.trim().isNotEmpty && currentUser != null) {
                       addComment(widget.imageId, commentController.text.trim(), currentUser.uid);
-                      commentController.clear(); // Clear the text field after submitting
+                      commentController.clear();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Caption submitted.')),
                       );
-                      FocusScope.of(context).unfocus(); // Dismiss the keyboard
-                      setState(() {}); // Refresh the comments list
+                      FocusScope.of(context).unfocus();
+                      setState(() {});
                     }
                   },
                 ),
@@ -150,11 +150,11 @@ class _AllCommentsState extends State<AllComments> {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.all(10), // Adds padding around the dialog
+          insetPadding: EdgeInsets.all(10),
           child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
-            child: InteractiveViewer( // Allows users to pinch-to-zoom
-              panEnabled: false, // Set it to false to prevent panning.
+            child: InteractiveViewer(
+              panEnabled: false,
               boundaryMargin: EdgeInsets.all(80),
               minScale: 0.5,
               maxScale: 4,
@@ -249,7 +249,7 @@ class _AllCommentsState extends State<AllComments> {
       builder: (BuildContext bc) {
         List<Widget> options = [];
         
-        // Check if the current user is the commenter
+        
         if (currentUser?.uid == commenterId) {
           options.addAll([
             ListTile(
@@ -271,7 +271,7 @@ class _AllCommentsState extends State<AllComments> {
           ]);
         }
         
-        // Add the Copy option for all users
+      
         options.add(ListTile(
           leading: Icon(Icons.copy),
           title: Text('Copy'),
@@ -327,12 +327,12 @@ class _AllCommentsState extends State<AllComments> {
       await FirebaseFirestore.instance.collection('comments').doc(imageId).collection('imageComments').doc(commentId).update({
         'text': newText.trim(),
       });
-      setState(() {}); // Refresh the comments list
+      setState(() {});
     }
   }
 
   Future<void> _deleteComment(String imageId, String commentId) async {
     await FirebaseFirestore.instance.collection('comments').doc(imageId).collection('imageComments').doc(commentId).delete();
-    setState(() {}); // Refresh the comments list
+    setState(() {});
   }
 }
