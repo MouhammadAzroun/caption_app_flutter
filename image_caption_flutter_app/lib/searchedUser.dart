@@ -5,9 +5,9 @@ import 'allComments.dart';
 
 class SearchedUser extends StatelessWidget {
   final Map<String, dynamic> user;
-  final String userId; // Add this line
+  final String userId; 
 
-  const SearchedUser({Key? key, required this.user, required this.userId}) : super(key: key); // Update this line
+  const SearchedUser({Key? key, required this.user, required this.userId}) : super(key: key); 
 
   Future<List<Map<String, dynamic>>> fetchUserImages(String userId) async {
     final querySnapshot = await FirebaseFirestore.instance
@@ -17,7 +17,7 @@ class SearchedUser extends StatelessWidget {
     var images = querySnapshot.docs
         .map((doc) => {
               ...doc.data() as Map<String, dynamic>,
-              'id': doc.id, // Include the document ID
+              'id': doc.id, 
              })
         .toList();
 
@@ -40,16 +40,16 @@ class SearchedUser extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start, // Align to the start (left)
+                mainAxisAlignment: MainAxisAlignment.start, 
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 16.0), // Add padding on the left
+                    padding: const EdgeInsets.only(left: 16.0),
                     child: CircleAvatar(
                       backgroundImage: AssetImage(user['avatar']),
-                      radius: 35, // Make the avatar a bit smaller
+                      radius: 35, 
                     ),
                   ),
-                  SizedBox(width: 20), // Space between avatar and username
+                  SizedBox(width: 20), 
                   Text(
                     user['username'],
                     style: Theme.of(context).textTheme.headline4,
@@ -57,7 +57,6 @@ class SearchedUser extends StatelessWidget {
                 ],
               ),
             ),
-            // Add more user details here
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
                 future: fetchUserImages(userId),
@@ -71,15 +70,15 @@ class SearchedUser extends StatelessWidget {
                   final images = snapshot.data!;
                   return GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // Number of columns
-                      crossAxisSpacing: 4.0, // Horizontal space between cards
-                      mainAxisSpacing: 4.0, // Vertical space between cards
+                      crossAxisCount: 3, 
+                      crossAxisSpacing: 4.0, 
+                      mainAxisSpacing: 4.0, 
                     ),
                     itemCount: images.length,
                     itemBuilder: (context, index) {
                       final image = images[index];
-                      final timestamp = image['timestamp'] as Timestamp; // Assuming 'timestamp' is of type Timestamp
-                      final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp.toDate()); // Format the date
+                      final timestamp = image['timestamp'] as Timestamp; 
+                      final formattedDate = DateFormat('MM/dd/yyyy').format(timestamp.toDate());
                       return GridTile(
                         child: GestureDetector(
                           onTap: () {

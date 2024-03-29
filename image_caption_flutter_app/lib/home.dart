@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'allComments.dart';
-import 'searchedUser.dart'; // Import SearchedUser page
+import 'searchedUser.dart';
 
 class Home extends StatelessWidget {
   Home({super.key});
@@ -23,7 +23,7 @@ class Home extends StatelessWidget {
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
-                child: SizedBox(height: 10), // Top padding
+                child: SizedBox(height: 10),
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
@@ -32,16 +32,16 @@ class Home extends StatelessWidget {
                     return Stack(
                       children: [
                         Container(
-                          margin: const EdgeInsets.only(bottom: 16), // Adds space between posts
+                          margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white, // Assuming a light theme; adjust as necessary
-                            borderRadius: BorderRadius.circular(10), // Rounded corners for a softer look
+                            color: Colors.white, 
+                            borderRadius: BorderRadius.circular(10), 
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.2), // Soft shadow
+                                color: Colors.grey.withOpacity(0.2),
                                 spreadRadius: 0,
                                 blurRadius: 10,
-                                offset: Offset(0, 2), // Vertical offset for the shadow
+                                offset: Offset(0, 2),
                               ),
                             ],
                           ),
@@ -95,7 +95,6 @@ class Home extends StatelessWidget {
                                         }
                                         final comments = snapshot.data?.docs ?? [];
                                         if (comments.isEmpty) {
-                                          // If there are no comments, display the message
                                           return Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text("No captions have been written on this image", style: TextStyle(color: Colors.grey)),
@@ -109,10 +108,8 @@ class Home extends StatelessWidget {
                                             }
                                             final topComment = topCommentSnapshot.data;
                                             if (topComment == null) {
-                                              return SizedBox.shrink(); // Or some placeholder if no comments exist
+                                              return SizedBox.shrink(); 
                                             }
-                                            // Use your existing code to build the UI for the top comment
-                                            // For example, assuming you have a method buildCommentWidget(QueryDocumentSnapshot comment)
                                             return FutureBuilder<Map<String, String>>(
                                               future: getUserInfo(topComment['commenter']),
                                               builder: (context, userSnapshot) {
@@ -149,9 +146,9 @@ class Home extends StatelessWidget {
                                                           trailing: Row(
                                                             mainAxisSize: MainAxisSize.min,
                                                             children: [
-                                                              Image.asset('assets/images/Emojis/sleeping.png', width: 24), // Default sleeping image
-                                                              SizedBox(width: 8), // Space between icon and text
-                                                              Text('...', style: TextStyle(fontWeight: FontWeight.bold)), // Placeholder for votes count
+                                                              Image.asset('assets/images/Emojis/sleeping.png', width: 24), 
+                                                              SizedBox(width: 8),
+                                                              Text('...', style: TextStyle(fontWeight: FontWeight.bold)), 
                                                             ],
                                                           ),
                                                         );
@@ -174,8 +171,8 @@ class Home extends StatelessWidget {
                                                                 upvoteComment(topComment.id, FirebaseAuth.instance.currentUser!.uid);
                                                               },
                                                             ) : Image.asset('assets/images/Emojis/sleeping.png', width: 24),
-                                                            SizedBox(width: 8), // Space between icon and text
-                                                            Text('$voteCount', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)), // Modern styled vote count
+                                                            SizedBox(width: 8), 
+                                                            Text('$voteCount', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
                                                           ],
                                                         ),
                                                       );
@@ -199,23 +196,23 @@ class Home extends StatelessWidget {
                                     ),
                                     SizedBox(height: 8),
                                     Padding(
-                                      padding: const EdgeInsets.only(bottom: 16), // Adds space below the text field
+                                      padding: const EdgeInsets.only(bottom: 16),
                                       child: FirebaseAuth.instance.currentUser != null ? TextField(
                                         controller: commentController,
                                         decoration: InputDecoration(
                                           labelText: 'Add a caption...',
-                                          contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0), // Reduced padding
+                                          contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0), 
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(30.0), // More rounded corners
-                                            borderSide: BorderSide(width: 0.5), // Thinner border
+                                            borderRadius: BorderRadius.circular(30.0), 
+                                            borderSide: BorderSide(width: 0.5),
                                           ),
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(30.0),
-                                            borderSide: BorderSide(width: 0.5, color: const Color.fromARGB(255, 30, 30, 30)), // Thinner and grey border when not focused
+                                            borderSide: BorderSide(width: 0.5, color: const Color.fromARGB(255, 30, 30, 30)), 
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(30.0),
-                                            borderSide: BorderSide(width: 1, color: Colors.blue), // Slightly thicker and blue border when focused
+                                            borderSide: BorderSide(width: 1, color: Colors.blue), 
                                           ),
                                           suffixIcon: IconButton(
                                             icon: Icon(Icons.send, color: Colors.blue),
@@ -223,7 +220,7 @@ class Home extends StatelessWidget {
                                               final currentUser = FirebaseAuth.instance.currentUser;
                                               if (commentController.text.trim().isNotEmpty && currentUser != null) {
                                                 addComment(items[index].id, commentController.text.trim(), currentUser.uid);
-                                                commentController.clear(); // Clear the text field after submitting
+                                                commentController.clear(); 
                                                 ScaffoldMessenger.of(context).showSnackBar(
                                                   SnackBar(content: Text('Caption submitted.')),
                                                 );
@@ -269,7 +266,7 @@ class Home extends StatelessWidget {
                 ),
               ),
               SliverToBoxAdapter(
-                child: SizedBox(height: 10), // Bottom padding
+                child: SizedBox(height: 10), 
               ),
             ],
           );
@@ -314,7 +311,6 @@ class Home extends StatelessWidget {
       int voteCount = votes.length;
       return voteCount;
     } else {
-      // If the document doesn't exist, then the comment has no votes
       return 0;
     }
   }
@@ -325,7 +321,7 @@ class Home extends StatelessWidget {
       Map<String, dynamic> userData = userDoc.data()! as Map<String, dynamic>;
       return {
         'username': userData['username'] ?? 'Unknown User',
-        'avatar': userData['avatar'] ?? 'assets/images/Avatars/default.png', // Assuming you have a default avatar
+        'avatar': userData['avatar'] ?? 'assets/images/Avatars/default.png', 
       };
     } else {
       return {
@@ -376,11 +372,11 @@ class Home extends StatelessWidget {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.all(10), // Optional: Adds padding around the dialog
+          insetPadding: EdgeInsets.all(10),
           child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: InteractiveViewer( // Allows users to pinch-to-zoom
-              panEnabled: false, // Set it to false to prevent panning.
+              panEnabled: false,
               boundaryMargin: EdgeInsets.all(80),
               minScale: 0.5,
               maxScale: 4,

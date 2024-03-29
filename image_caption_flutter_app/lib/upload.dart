@@ -41,7 +41,7 @@ class _UploadState extends State<Upload> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset('assets/images/Upload/upload.gif', width: 100, height: 100), // You can replace this with your gif
+                    Image.asset('assets/images/Upload/upload.gif', width: 100, height: 100),
                     SizedBox(width: 10),
                     Text("Uploading...", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ],
@@ -63,7 +63,6 @@ class _UploadState extends State<Upload> {
         // After successful upload, show the alert dialog
         _showUploadSuccessDialog();
       } catch (e) {
-        // If there's an error, dismiss the loading dialog and show an error message
         Navigator.of(context, rootNavigator: true).pop();
         print(e);
       }
@@ -134,14 +133,14 @@ class _UploadState extends State<Upload> {
                 width: 200,
                 height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.white, // Light shade for the container
-                  borderRadius: BorderRadius.circular(100), // Circular shape
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(100), 
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withOpacity(0.5),
                       spreadRadius: 5,
                       blurRadius: 7,
-                      offset: Offset(0, 3), // changes position of shadow
+                      offset: Offset(0, 3), 
                     ),
                   ],
                 ),
@@ -177,8 +176,8 @@ class _UploadState extends State<Upload> {
               icon: Icon(Icons.cloud_upload),
               label: Text('Publish Image'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-                foregroundColor: Colors.white, // Text color
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30.0),
                 ),

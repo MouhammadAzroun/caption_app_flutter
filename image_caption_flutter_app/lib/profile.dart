@@ -47,7 +47,7 @@ class _ProfileState extends State<Profile> {
         return AlertDialog(
           backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Light blue theme background
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // Rounded corners for modern look
+            borderRadius: BorderRadius.circular(20),
           ),
           title: Text(
             'Change Username',
@@ -59,11 +59,11 @@ class _ProfileState extends State<Profile> {
             controller: _usernameController,
             decoration: InputDecoration(
               hintText: 'Enter new username',
-              hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), // Light blue hint text
-              enabledBorder: UnderlineInputBorder( // Underline border color when TextField is enabled
+              hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), 
+              enabledBorder: UnderlineInputBorder( 
                 borderSide: BorderSide(color: Colors.blue[300]!),
               ),
-              focusedBorder: UnderlineInputBorder( // Underline border color when TextField is focused
+              focusedBorder: UnderlineInputBorder( 
                 borderSide: BorderSide(color: Colors.blue[800]!),
               ),
             ),
@@ -105,7 +105,7 @@ class _ProfileState extends State<Profile> {
         'avatar': path,
       });
       widget.onAvatarUpdated(path); // Call the callback function
-      fetchUserData(); // Assuming fetchUserData() fetches the latest user data and updates the UI
+      fetchUserData();
     }
   }
 
@@ -117,7 +117,7 @@ class _ProfileState extends State<Profile> {
           backgroundColor: Colors.white, // Set the background color to white
           title: Text("Choose an image"),
           content: Container(
-            height: 360, // Adjust height as necessary
+            height: 360, 
             width: double.maxFinite,
             child: GridView.count(
               crossAxisCount: 3,
@@ -185,14 +185,14 @@ class _ProfileState extends State<Profile> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(height: 40), // Add some spacing at the top
+                    SizedBox(height: 40), 
                     Center( // Center the stack in the middle of the screen
                       child: Stack(
                         alignment: Alignment.bottomRight, // Position the edit icon at the bottom right of the avatar
                         children: [
                           CircleAvatar(
-                            radius: 70, // Increase the radius size here
-                            backgroundColor: Colors.blue.shade100, // Changed to blue theme
+                            radius: 70,
+                            backgroundColor: Colors.blue.shade100,
                             child: userData!['avatar'] != null 
                                 ? ClipOval(
                                     child: Image.asset(
@@ -203,22 +203,22 @@ class _ProfileState extends State<Profile> {
                                     ),
                                   )
                                 : Icon(
-                                    Icons.person, // Default icon
-                                    size: 70, // Adjust the size of the icon to match the new radius
-                                    color: Colors.white, // Icon color
+                                    Icons.person,
+                                    size: 70,
+                                    color: Colors.white,
                                   ),
                           ),
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.blue, // Match the icon button background to the theme or avatar ring
+                              color: Colors.blue,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white, // Add a white border for better visibility
+                                color: Colors.white,
                                 width: 2,
                               ),
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.white), // Ensure icon color contrasts well with the background
+                              icon: const Icon(Icons.edit, color: Colors.white),
                               onPressed: () {
                                 _showImagePicker(context);
                               },
@@ -227,13 +227,13 @@ class _ProfileState extends State<Profile> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20), // Add some spacing
+                    SizedBox(height: 20),
                     Card(
-                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5), // Adjust margins as needed
+                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                       child: ListTile(
                         title: Text('Username'),
                         subtitle: Text(userData!['username'] ?? 'Not available'),
-                        leading: Icon(Icons.person, color: Colors.blue), // Changed to blue theme
+                        leading: Icon(Icons.person, color: Colors.blue),
                         trailing: IconButton(
                           icon: Icon(Icons.edit, color: Colors.blue),
                           onPressed: () => _changeUsername(context),
@@ -245,7 +245,7 @@ class _ProfileState extends State<Profile> {
                       child: ListTile(
                         title: Text('Email'),
                         subtitle: Text(userData!['email'] ?? 'Not available'),
-                        leading: Icon(Icons.email, color: Colors.blue), // Changed to blue theme
+                        leading: Icon(Icons.email, color: Colors.blue),
                       ),
                     ),
                     Card(
@@ -260,7 +260,7 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20), // Add some spacing
+                    SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -287,13 +287,11 @@ class _ProfileState extends State<Profile> {
   Widget _buildClickablePost(BuildContext context, String title) {
     return InkWell(
       onTap: () {
-        // Navigate to the user's posts page
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => UserPostsPage()));
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.post_add, size: 24, color: Colors.blue), // Changed icon color to blue
+          Icon(Icons.post_add, size: 24, color: Colors.blue),
           Text(
             title,
             style: TextStyle(fontSize: 16),
@@ -379,9 +377,9 @@ class _ProfileState extends State<Profile> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Light blue theme background
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // Rounded corners for modern look
+            borderRadius: BorderRadius.circular(20),
           ),
           title: Text(
             'Change Password',
@@ -397,11 +395,11 @@ class _ProfileState extends State<Profile> {
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Enter old password',
-                  hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), // Light blue hint text
-                  enabledBorder: UnderlineInputBorder( // Underline border color when TextField is enabled
+                  hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)),
+                  enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.blue[300]!),
                   ),
-                  focusedBorder: UnderlineInputBorder( // Underline border color when TextField is focused
+                  focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.blue[800]!),
                   ),
                 ),
@@ -412,11 +410,11 @@ class _ProfileState extends State<Profile> {
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Enter new password',
-                  hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)), // Light blue hint text
-                  enabledBorder: UnderlineInputBorder( // Underline border color when TextField is enabled
+                  hintStyle: TextStyle(color: Color.fromARGB(255, 138, 138, 138)),
+                  enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.blue[300]!),
                   ),
-                  focusedBorder: UnderlineInputBorder( // Underline border color when TextField is focused
+                  focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.blue[800]!),
                   ),
                 ),
@@ -425,7 +423,7 @@ class _ProfileState extends State<Profile> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel', style: TextStyle(color: Colors.blue[800])), // Dark blue text for buttons
+              child: Text('Cancel', style: TextStyle(color: Colors.blue[800])),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
